@@ -1,0 +1,128 @@
+<?php
+
+/* ***************************************** */
+/* Hook Implementations                      */
+/* ***************************************** */
+
+/**
+ * Implements hook_permission().
+ */
+function iit_ifsh_field_member_access_permission() {
+  return array(
+    'view member resource' => array(
+      'title' => t('View or Download a private member resource or field.'),
+      ),
+    );
+}
+
+
+/***
+ * Implements hook_file_download_access_alter().
+ *
+ * Alter the access rules applied to a file download.
+ *
+ * Entities that implement file management set the access rules for their
+ * individual files. Module may use this hook to create custom access rules
+ * for file downloads.
+ *
+ * @see hook_file_download_access().
+ *
+ * @param $grants
+ *   An array of grants gathered by hook_file_download_access(). The array is
+ *   keyed by the module that defines the entity type's access control; the
+ *   values are Boolean grant responses for each module.
+ * @param array $file_item
+ *   The array of information about the file to alter access for.
+ * @param $entity_type
+ *   The type of $entity; for example, 'node' or 'user'.
+ * @param $entity
+ *   The $entity to which $file is referenced.
+ */
+function iit_ifsh_field_member_access_file_download_access_alter(&$grants, $file_item, $entity_type, $entity) {
+  // For our example module, we always enforce the rules set by node module.
+  if (isset($grants['node'])) {
+
+    if ($entity->type == 'report') {
+
+      if (user_access('bypass node access') || user_access('view member resource')) {
+        $grants['node'] = TRUE;
+      } else {
+        $grants['node'] = FALSE;
+      }
+      
+      // // Test Public Private Field give override public permission
+      // $hasTestPrivateFileField = field_get_items('node', $entity, 'field_test_private');
+      // if ($hasTestPrivateFileField) {
+      //   $urlRequest = $file_item['uri'];
+      //   foreach ($hasTestPrivateFileField as $key => $value) {
+      //     if ($urlRequest == $value['uri']) {
+      //       if (user_access('access content')) {
+      //         $grants['node'] = TRUE;
+      //       }
+      //     }
+      //   }
+      // } // Test Public Private Field
+
+    } // report entity
+
+    if ($entity->type == 'project') {  
+
+      if (user_access('bypass node access') || user_access('view member resource')) {
+        $grants['node'] = TRUE;
+      } else {
+        $grants['node'] = FALSE;
+      }
+
+    } // project entity
+
+  }
+}
+
+
+/**
+ * Implements hook_field_access().
+ *
+ * Determine whether the user has access to a given field.
+ *
+ * This hook is invoked from field_access() to let modules block access to
+ * operations on fields. If no module returns FALSE, the operation is allowed.
+ *
+ * @param $op
+ *   The operation to be performed. Possible values: 'edit', 'view'.
+ * @param $field
+ *   The field on which the operation is to be performed.
+ * @param $entity_type
+ *   The type of $entity; for example, 'node' or 'user'.
+ * @param $entity
+ *   (optional) The entity for the operation.
+ * @param $account
+ *   (optional) The account to check; if not given use currently logged in user.
+ *
+ * @return
+ *   TRUE if the operation is allowed, and FALSE if the operation is denied.
+ *
+ * @ingroup field_types
+ */
+function iit_ifsh_field_member_access_field_access($op, $field, $entity_type, $entity, $account) {
+  if ($entity->type == 'project') {
+    
+    if ($op == 'view') {
+      if ($field['field_name'] == 'body') {
+        // Check for anonymous access permission for body
+        if (user_access('access content')) {
+          return TRUE;
+        } else {
+          return FALSE;
+        }
+      } else {
+        // Check all other node fields
+        if (user_access('bypass node access') || user_access('view member resource')) {
+          return TRUE;
+        } else {
+          return FALSE;
+        }
+      }
+    }
+  } // $op = view
+
+}

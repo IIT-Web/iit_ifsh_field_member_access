@@ -1,0 +1,8 @@
+name = IIT IFSH Field Member Access
+description = IFSH Field and Private File Member Access
+
+core = 7.x
+package = Illinois Institute of Technology
+version = 7.x-1.0
+
+files[] = iit_ifsh_field_member_access.module
