@@ -104,25 +104,29 @@ function iit_ifsh_field_member_access_file_download_access_alter(&$grants, $file
  * @ingroup field_types
  */
 function iit_ifsh_field_member_access_field_access($op, $field, $entity_type, $entity, $account) {
-  if ($entity->type == 'project') {
-    
-    if ($op == 'view') {
-      if ($field['field_name'] == 'body') {
-        // Check for anonymous access permission for body
-        if (user_access('access content')) {
-          return TRUE;
+
+  if ($entity) {
+
+    if ($entity->type == 'project') {
+      if ($op == 'view') {
+        if ($field['field_name'] == 'body') {
+          // Check for anonymous access permission for body
+          if (user_access('access content')) {
+            return TRUE;
+          } else {
+            return FALSE;
+          }
         } else {
-          return FALSE;
+          // Check all other node fields
+          if (user_access('bypass node access') || user_access('view member resource')) {
+            return TRUE;
+          } else {
+            return FALSE;
+          }
         }
-      } else {
-        // Check all other node fields
-        if (user_access('bypass node access') || user_access('view member resource')) {
-          return TRUE;
-        } else {
-          return FALSE;
-        }
-      }
-    }
-  } // $op = view
+      } // $op = view
+    } // type == project
+
+  } // test for entity
 
 }
